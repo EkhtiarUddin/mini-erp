@@ -1,29 +1,44 @@
-# Logs
-logs
-*.log
+# Environment variables (NEVER push these!)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Node modules
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Build output
+dist/
+dist-ssr/
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
+# IDE
+.vscode/
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Environment variables
-.env
-.env.local
-.env.production
+# Supabase temp files (NEVER push these!)
+supabase/temp/
+supabase/.temp/
+supabase/pg-delta/
+supabase/cli-latest
+supabase/gotrue-version
+supabase/linked-project.json
+supabase/pooler-url
+supabase/postgres-version
+supabase/project-ref
+supabase/rest-version
+supabase/storage-version
+supabase/.branches/
+supabase/.temp/
+
+# Supabase config (only if you don't want to share)
+# supabase/config.toml  ← Optional, keep if you want to share config
