@@ -375,7 +375,7 @@ MIT — Free to use and modify.
 | **AI Tool Usage** | Leveraged Claude for 95% of code generation |
 | **Software Architecture** | Implemented reusable components, custom hooks, and service layer |
 | **Problem Solving** | Overcame sorting, RLS, and PDF export challenges |
-| **Speed of Delivery** | Completed in ~5.5 active hours |
+| **Speed of Delivery** | Completed in ~7.5 active hours |
 | **Production Readiness** | Deployed to Vercel with proper environment variables |
 
 ---
