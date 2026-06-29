@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts'
-import { Download, FileText, Package, Users, Truck, ShoppingCart, Receipt, Loader2 } from 'lucide-react'
+import { Download, FileText, Package, Users, Truck, ShoppingCart, Receipt, Loader2, Printer } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/misc'
 import { supabase } from '@/lib/supabase'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
+import html2canvas from 'html2canvas'
 
 type ReportTab = 'products' | 'customers' | 'suppliers' | 'purchases' | 'sales'
 
@@ -41,6 +44,8 @@ export default function ReportsPage() {
   const [supplierReport, setSupplierReport] = useState<SupplierReport[]>([])
   const [purchaseReport, setPurchaseReport] = useState<PurchaseReport[]>([])
   const [salesReport, setSalesReport] = useState<SalesReport[]>([])
+  
+  const chartRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => { loadReport(activeTab) }, [activeTab, dateRange])
 
@@ -166,6 +171,97 @@ export default function ReportsPage() {
     URL.revokeObjectURL(url)
   }
 
+  const exportPDFWithChart = async (data: Record<string, unknown>[], title: string, filename: string, isChart: boolean = true) => {
+    if (!data.length) return
+    
+    try {
+      const doc = new jsPDF('landscape', 'mm', 'a4')
+      const pageWidth = doc.internal.pageSize.getWidth()
+      
+      // Add title
+      doc.setFontSize(18)
+      doc.text(title, pageWidth / 2, 15, { align: 'center' })
+      
+      // Add date
+      doc.setFontSize(10)
+      doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 22, { align: 'center' })
+      
+      let yPosition = 30
+      
+      // If we need to capture chart
+      if (isChart && chartRef.current) {
+        try {
+          // Capture the chart as image
+          const canvas = await html2canvas(chartRef.current, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            allowTaint: true,
+            useCORS: true,
+            logging: false,
+          })
+          
+          const imgData = canvas.toDataURL('image/png')
+          const imgWidth = pageWidth - 40
+          const imgHeight = (canvas.height / canvas.width) * imgWidth
+          
+          // Add chart to PDF
+          doc.addImage(imgData, 'PNG', 20, yPosition, imgWidth, imgHeight)
+          yPosition += imgHeight + 10
+        } catch (error) {
+          console.error('Error capturing chart:', error)
+        }
+      }
+      
+      // Add table data
+      const headers = Object.keys(data[0])
+      const rows = data.map(row => headers.map(key => String(row[key] ?? '')))
+      
+      // If chart was added, start table on next page if needed
+      if (yPosition > 150) {
+        doc.addPage()
+        yPosition = 20
+      }
+      
+      // Add table
+      ;(doc as any).autoTable({
+        head: [headers],
+        body: rows,
+        startY: yPosition,
+        styles: { fontSize: 7, cellPadding: 2 },
+        headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontSize: 8 },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        margin: { left: 20, right: 20 },
+      })
+      
+      doc.save(`${filename}.pdf`)
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      // Fallback: export without chart
+      const doc = new jsPDF('landscape', 'mm', 'a4')
+      const pageWidth = doc.internal.pageSize.getWidth()
+      
+      doc.setFontSize(18)
+      doc.text(title, pageWidth / 2, 15, { align: 'center' })
+      
+      doc.setFontSize(10)
+      doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, 22, { align: 'center' })
+      
+      const headers = Object.keys(data[0])
+      const rows = data.map(row => headers.map(key => String(row[key] ?? '')))
+      
+      ;(doc as any).autoTable({
+        head: [headers],
+        body: rows,
+        startY: 30,
+        styles: { fontSize: 7, cellPadding: 2 },
+        headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontSize: 8 },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+      })
+      
+      doc.save(`${filename}.pdf`)
+    }
+  }
+
   const tabs: { key: ReportTab; label: string; icon: React.ElementType }[] = [
     { key: 'sales', label: 'Sales Report', icon: Receipt },
     { key: 'purchases', label: 'Purchase Report', icon: ShoppingCart },
@@ -217,7 +313,7 @@ export default function ReportsPage() {
         <div className="flex justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>
       ) : (
         <>
-          {/* SALES REPORT */}
+          {/* SALES REPORT - PDF with Chart */}
           {activeTab === 'sales' && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -238,27 +334,34 @@ export default function ReportsPage() {
               <Card className="border-0 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div><CardTitle className="text-base">Monthly Sales & Revenue</CardTitle><CardDescription>Sales performance over time</CardDescription></div>
-                  <Button variant="outline" size="sm" onClick={() => exportCSV(salesReport as unknown as Record<string, unknown>[], 'sales-report')}>
-                    <Download className="h-4 w-4 mr-1" /> Export CSV
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => exportCSV(salesReport as unknown as Record<string, unknown>[], 'sales-report')}>
+                      <Download className="h-4 w-4 mr-1" /> Export CSV
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => exportPDFWithChart(salesReport as unknown as Record<string, unknown>[], 'Sales Report', 'sales-report', true)}>
+                      <Printer className="h-4 w-4 mr-1" /> Export PDF
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {salesReport.length === 0 ? (
                     <div className="text-center py-12 text-gray-400"><FileText className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>No sales data available</p></div>
                   ) : (
                     <>
-                      <ResponsiveContainer width="100%" height={280}>
-                        <LineChart data={salesReport}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                          <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-                          <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
-                          <Tooltip formatter={(v: number, n: string) => n === 'revenue' ? formatCurrency(v) : v} />
-                          <Legend />
-                          <Line yAxisId="left" type="monotone" dataKey="total_orders" name="Orders" stroke="#6366f1" strokeWidth={2} dot={{ r: 4 }} />
-                          <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue ($)" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
-                        </LineChart>
-                      </ResponsiveContainer>
+                      <div ref={chartRef}>
+                        <ResponsiveContainer width="100%" height={280}>
+                          <LineChart data={salesReport}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                            <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+                            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
+                            <Tooltip formatter={(v: number, n: string) => n === 'revenue' ? formatCurrency(v) : v} />
+                            <Legend />
+                            <Line yAxisId="left" type="monotone" dataKey="total_orders" name="Orders" stroke="#6366f1" strokeWidth={2} dot={{ r: 4 }} />
+                            <Line yAxisId="right" type="monotone" dataKey="revenue" name="Revenue ($)" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
                       <Table className="mt-4">
                         <TableHeader><TableRow>
                           <TableHead>Month</TableHead><TableHead>Total Orders</TableHead>
@@ -283,7 +386,7 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {/* PURCHASE REPORT */}
+          {/* PURCHASE REPORT - PDF with Chart */}
           {activeTab === 'purchases' && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -302,26 +405,33 @@ export default function ReportsPage() {
               <Card className="border-0 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div><CardTitle className="text-base">Monthly Purchase Orders</CardTitle></div>
-                  <Button variant="outline" size="sm" onClick={() => exportCSV(purchaseReport as unknown as Record<string, unknown>[], 'purchase-report')}>
-                    <Download className="h-4 w-4 mr-1" /> Export CSV
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => exportCSV(purchaseReport as unknown as Record<string, unknown>[], 'purchase-report')}>
+                      <Download className="h-4 w-4 mr-1" /> Export CSV
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => exportPDFWithChart(purchaseReport as unknown as Record<string, unknown>[], 'Purchase Report', 'purchase-report', true)}>
+                      <Printer className="h-4 w-4 mr-1" /> Export PDF
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {purchaseReport.length === 0 ? (
                     <div className="text-center py-12 text-gray-400"><FileText className="h-12 w-12 mx-auto mb-3 opacity-30" /><p>No purchase data available</p></div>
                   ) : (
                     <>
-                      <ResponsiveContainer width="100%" height={260}>
-                        <BarChart data={purchaseReport}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                          <YAxis tick={{ fontSize: 12 }} />
-                          <Tooltip />
-                          <Legend />
-                          <Bar dataKey="completed" name="Completed" fill="#10b981" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="pending" name="Pending" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
+                      <div ref={chartRef}>
+                        <ResponsiveContainer width="100%" height={260}>
+                          <BarChart data={purchaseReport}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                            <YAxis tick={{ fontSize: 12 }} />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="completed" name="Completed" fill="#10b981" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="pending" name="Pending" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
                       <Table className="mt-4">
                         <TableHeader><TableRow>
                           <TableHead>Month</TableHead><TableHead>Total Orders</TableHead>
@@ -346,7 +456,7 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {/* PRODUCT REPORT */}
+          {/* PRODUCT REPORT - CSV only */}
           {activeTab === 'products' && (
             <Card className="border-0 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -399,7 +509,7 @@ export default function ReportsPage() {
             </Card>
           )}
 
-          {/* CUSTOMER REPORT */}
+          {/* CUSTOMER REPORT - CSV only */}
           {activeTab === 'customers' && (
             <Card className="border-0 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -447,7 +557,7 @@ export default function ReportsPage() {
             </Card>
           )}
 
-          {/* SUPPLIER REPORT */}
+          {/* SUPPLIER REPORT - CSV only */}
           {activeTab === 'suppliers' && (
             <Card className="border-0 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
