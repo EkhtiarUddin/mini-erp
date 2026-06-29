@@ -268,9 +268,25 @@ npm run build
 
 ## 🤖 AI Development Workflow
 
-**Total Development Time:** ~3.5 Hours
-
+**Total Active Development Time:** ~5.5 Hours  
+**Project Timeline:** June 23 - June 29, 2026  
 **AI Tools Used:** Claude (Anthropic)
+
+### Time Breakdown
+
+| Activity | Time | Notes |
+|----------|------|-------|
+| Initial code generation | 30 min | Active coding with Claude |
+| Supabase setup & learning | 1.5 hours | Learning CLI, fixing migrations |
+| RLS policy fixes | 30 min | Debugging security policies |
+| Sorting & filtering fixes | 30 min | Fixing sort logic across pages |
+| UI improvements | 30 min | Stats cards, filters, layout |
+| PDF export | 20 min | Adding chart exports |
+| Deployment | 30 min | Vercel setup & env vars |
+| Documentation | 20 min | README updates |
+| **Total** | **~5.5 hours** | |
+
+> **Note:** ~1.5 hours were spent learning Supabase CLI and fixing database migration issues, as this was the first time using Supabase migrations. With prior experience, this time would be significantly shorter.
 
 ### Prompting Strategy
 
@@ -300,16 +316,14 @@ npm run build
 
 ### Challenges & Solutions
 
-| Challenge | Solution |
-|-----------|----------|
-| Stock sync on delete/edit | Implemented stock reversal logic before re-applying new values |
-| RLS blocking inserts | Added `INSERT` policy with `WITH CHECK (auth.uid() = id)` for profiles |
-| Type safety with Supabase joins | Used `as unknown as Type` casting for nested relation objects |
-| Invoice printing | Used `window.print()` with CSS print media queries |
-| Form arrays for line items | Used `react-hook-form` `useFieldArray` hook |
-| Sorting issues | Implemented local sort state with "Default" option |
-| Form default values | Used `undefined` instead of `0` to show placeholders |
-| PDF export with charts | Used `html2canvas` to capture charts as images |
+| Challenge | Time Spent | Solution |
+|-----------|------------|----------|
+| Supabase migration issues | 1.5 hours | Used `db push` with proper repair commands |
+| RLS policies blocking inserts | 30 min | Fixed policies with `WITH CHECK` conditions |
+| Sorting not working | 30 min | Implemented local sort state with "Default" option |
+| Form default values showing 0 | 15 min | Used `undefined` instead of `0` for number fields |
+| PDF export with charts | 20 min | Used `html2canvas` to capture charts as images |
+| Invoice header hover issue | 10 min | Fixed CSS with `[&>th]:hover:text-white` |
 
 ---
 
@@ -337,3 +351,33 @@ npm run build
 ## 📄 License
 
 MIT — Free to use and modify.
+
+---
+
+## 📊 Project Submission Summary
+
+### Live Demo
+
+🔗 **Production URL**: [https://mini-erp-drab.vercel.app](https://mini-erp-drab.vercel.app)
+
+### Repository
+
+🔗 **GitHub Repository**: [https://github.com/EkhtiarUddin/mini-erp](https://github.com/EkhtiarUddin/mini-erp)
+
+### AI Developer Assessment Criteria
+
+| Criteria | How It Was Met |
+|----------|----------------|
+| **Prompt Engineering** | Used structured prompts for architecture, components, and business logic |
+| **AI Tool Usage** | Leveraged Claude for 95% of code generation |
+| **Software Architecture** | Implemented reusable components, custom hooks, and service layer |
+| **Problem Solving** | Overcame sorting, RLS, and PDF export challenges |
+| **Speed of Delivery** | Completed in ~5.5 active hours |
+| **Production Readiness** | Deployed to Vercel with proper environment variables |
+
+---
+
+### 🚀 Quick Links
+
+- [Live Demo](https://mini-erp-xxxx.vercel.app) *(Replace with your actual URL)*
+- [GitHub Repository](https://github.com/EkhtiarUddin/mini-erp)
