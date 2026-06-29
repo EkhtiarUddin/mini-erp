@@ -42,3 +42,6 @@ supabase/.temp/
 
 # Supabase config (only if you don't want to share)
 # supabase/config.toml  ← Optional, keep if you want to share config
+
+.vercel
+.env*
