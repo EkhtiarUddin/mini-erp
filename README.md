@@ -127,7 +127,7 @@ src/
 ### Step 1: Clone & Install
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/EkhtiarUddin/mini-erp
 cd mini-erp
 npm install
 ```
@@ -382,5 +382,5 @@ MIT — Free to use and modify.
 
 ### 🚀 Quick Links
 
-- [Live Demo](https://mini-erp-xxxx.vercel.app) *(Replace with your actual URL)*
+- [Live Demo](https://mini-erp-drab.vercel.app)
 - [GitHub Repository](https://github.com/EkhtiarUddin/mini-erp)
