@@ -42,8 +42,6 @@ export function DataTable<T extends Record<string, any>>({
   onPageSizeChange,
   onRowClick,
   onSort,
-  sortKey,
-  sortDirection,
   className,
 }: DataTableProps<T>) {
   if (loading) {
