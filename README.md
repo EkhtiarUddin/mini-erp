@@ -268,7 +268,7 @@ npm run build
 
 ## 🤖 AI Development Workflow
 
-**Total Active Development Time:** ~5.5 Hours  
+**Total Active Development Time:** ~7.5 Hours  
 **Project Timeline:** June 23 - June 29, 2026  
 **AI Tools Used:** Claude (Anthropic)
 
@@ -276,17 +276,20 @@ npm run build
 
 | Activity | Time | Notes |
 |----------|------|-------|
-| Initial code generation | 30 min | Active coding with Claude |
-| Supabase setup & learning | 1.5 hours | Learning CLI, fixing migrations |
+| Architecture planning & prompting |	40 min |	Designing structure, writing prompts |
+| Initial code generation | 40 min | Active coding with Claude |
+| Supabase setup & learning | 2 hours | Learning CLI, fixing migrations |
 | RLS policy fixes | 30 min | Debugging security policies |
 | Sorting & filtering fixes | 30 min | Fixing sort logic across pages |
-| UI improvements | 30 min | Stats cards, filters, layout |
+| UI improvements & code splitting | 30 min | Stats cards, filters, layout |
+| Form fixes | 30 min | Default values, validation |
+| Testing & debugging | 1 hour | Manual testing, fixing edge cases |
 | PDF export | 20 min | Adding chart exports |
 | Deployment | 30 min | Vercel setup & env vars |
 | Documentation | 20 min | README updates |
-| **Total** | **~5.5 hours** | |
+| **Total** | **~7.5 hours** | |
 
-> **Note:** ~1.5 hours were spent learning Supabase CLI and fixing database migration issues, as this was the first time using Supabase migrations. With prior experience, this time would be significantly shorter.
+> **Note:** ~2 hours were spent learning Supabase CLI and fixing database migration issues, as this was the first time using Supabase migrations. With prior experience, this time would be significantly shorter.
 
 ### Prompting Strategy
 
@@ -318,7 +321,7 @@ npm run build
 
 | Challenge | Time Spent | Solution |
 |-----------|------------|----------|
-| Supabase migration issues | 1.5 hours | Used `db push` with proper repair commands |
+| Supabase migration issues | 2 hours | Used `db push` with proper repair commands |
 | RLS policies blocking inserts | 30 min | Fixed policies with `WITH CHECK` conditions |
 | Sorting not working | 30 min | Implemented local sort state with "Default" option |
 | Form default values showing 0 | 15 min | Used `undefined` instead of `0` for number fields |
